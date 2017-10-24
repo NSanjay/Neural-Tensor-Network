@@ -2,7 +2,7 @@
 # Copyright (c) 2014 Siddharth Agrawal
 # Code written by : Siddharth Agrawal
 # Email ID : siddharth.950@gmail.com
-
+import sys
 import math
 import pickle
 import numpy as np
@@ -176,6 +176,7 @@ class NeuralTensorNetwork(object):
     #######################################################################################
     """ Returns cost and parameter gradients for a given batch of data """
 
+
     def neuralTensorNetworkCost(self, theta, data_batch, flip):
 
         """ Get stack of network parameters """
@@ -188,10 +189,9 @@ class NeuralTensorNetwork(object):
         entity_vector_grad = np.zeros((self.embedding_size, self.num_entities))
 
         """ Assign entity vectors to be the mean of word vectors involved """
-
         for entity in range(self.num_entities):
+            entity_vectors[:, entity] = np.mean(word_vectors[:, self.word_indices[entity]], axis=1)
 
-            entity_vectors[:, entity] = np.mean(word_vectors[:, self.word_indices[entity]], axis = 1)
 
         """ Initialize cost as zero """
 
@@ -215,10 +215,9 @@ class NeuralTensorNetwork(object):
             e3 = data_batch['e3'][rel_i_list]
 
             """ Get entity vectors for examples of 'i'th relation """
-
-            entity_vectors_e1 = entity_vectors[:, e1.tolist()]
-            entity_vectors_e2 = entity_vectors[:, e2.tolist()]
-            entity_vectors_e3 = entity_vectors[:, e3.tolist()]
+            entity_vectors_e1 = entity_vectors[:, map(int, e1.tolist())]
+            entity_vectors_e2 = entity_vectors[:, map(int, e2.tolist())]
+            entity_vectors_e3 = entity_vectors[:, map(int, e3.tolist())]
 
             """ Choose entity vectors and lists based on 'flip' """
 
@@ -350,10 +349,10 @@ class NeuralTensorNetwork(object):
 
                 """ Add contribution of 'W[i]' term in the entity vectors' gradient """
 
-                entity_vector_grad += (np.dot(W[i][:, :, k], entity_vectors[:, e2.tolist()]) * temp_pos) * e1_sparse \
-                    + (np.dot(W[i][:, :, k].T, entity_vectors[:, e1.tolist()]) * temp_pos) * e2_sparse \
-                    + (np.dot(W[i][:, :, k], entity_vectors[:, e2_neg.tolist()]) * temp_neg) * e1_neg_sparse \
-                    + (np.dot(W[i][:, :, k].T, entity_vectors[:, e1_neg.tolist()]) * temp_neg) * e2_neg_sparse
+                entity_vector_grad += (np.dot(W[i][:, :, k], entity_vectors[:, map(int, e2.tolist())]) * temp_pos) * e1_sparse \
+                    + (np.dot(W[i][:, :, k].T, entity_vectors[:, map(int,e1.tolist())]) * temp_pos) * e2_sparse \
+                    + (np.dot(W[i][:, :, k], entity_vectors[:, map(int, e2_neg.tolist())]) * temp_neg) * e1_neg_sparse \
+                    + (np.dot(W[i][:, :, k].T, entity_vectors[:, map(int, e1_neg.tolist())]) * temp_neg) * e2_neg_sparse
 
             """ Normalize the gradients with the training batch size """
 
@@ -622,6 +621,7 @@ def getTrainingData(file_name, entity_dictionary, relation_dictionary):
 ###########################################################################################
 """ Create a numerical mapping of entity/relation data elements """
 
+
 def getDictionary(file_name):
 
     """ Read and split data linewise """
@@ -650,6 +650,7 @@ def getDictionary(file_name):
 ###########################################################################################
 """ Defines and returns the program parameters """
 
+
 def getProgramParameters():
 
     """ Initialize dictionary of program parameters """
@@ -672,6 +673,7 @@ def getProgramParameters():
 ###########################################################################################
 """ Trains the network, and calculates accuracy on test dataset """
 
+
 def neuralTensorNetwork():
 
     """ Get the program parameters """
@@ -687,18 +689,19 @@ def neuralTensorNetwork():
 
     """ Get entity and relation data dictionaries """
 
+    print "Loading Training Data"
     entity_dictionary, num_entities    = getDictionary('entities.txt')
     relation_dictionary, num_relations = getDictionary('relations.txt')
 
-    """ Get training data using entity and relation dictionaries """
+    print(""" Get training data using entity and relation dictionaries """)
 
     training_data, num_examples = getTrainingData('train.txt', entity_dictionary, relation_dictionary)
 
-    """ Get word indices for all the entities in the data """
+    print(""" Get word indices for all the entities in the data """)
 
     word_indices, num_words = getWordIndices('wordIndices.p')
 
-    """ Store newly learned data in the dictionary """
+    print(""" Store newly learned data in the dictionary """)
 
     program_parameters['num_entities']  = num_entities
     program_parameters['num_relations'] = num_relations
@@ -706,13 +709,13 @@ def neuralTensorNetwork():
     program_parameters['num_words']     = num_words
     program_parameters['word_indices']  = word_indices
 
-    """ Create a NeuralTensorNetwork object """
+    print(""" Create a NeuralTensorNetwork object """)
 
     network = NeuralTensorNetwork(program_parameters)
 
     for i in range(num_iterations):
-
-        """ Create a training batch by picking up random samples from training data """
+        print i
+        print(""" Create a training batch by picking up random samples from training data """)
 
         batch_indices = np.random.randint(num_examples, size = batch_size)
         data          = {}
@@ -721,7 +724,7 @@ def neuralTensorNetwork():
         data['e2']    = np.tile(training_data[batch_indices, 2], (1, corrupt_size)).T
         data['e3']    = np.random.randint(num_entities, size = (batch_size * corrupt_size, 1))
 
-        """ Optimize the network using the training batch """
+        print(""" Optimize the network using the training batch """)
 
         if np.random.random() < 0.5:
 
@@ -732,16 +735,16 @@ def neuralTensorNetwork():
             opt_solution = scipy.optimize.minimize(network.neuralTensorNetworkCost, network.theta,
                 args = (data, 1,), method = 'L-BFGS-B', jac = True, options = {'maxiter': batch_iterations})
 
-        """ Store the optimized theta value """
+        print(""" Store the optimized theta value """)
 
         network.theta = opt_solution.x
 
-    """ Get test data to calculate predictions """
+    print(""" Get test data to calculate predictions """)
 
     dev_data, dev_labels   = getTestData('dev.txt', entity_dictionary, relation_dictionary)
     test_data, test_labels = getTestData('test.txt', entity_dictionary, relation_dictionary)
 
-    """ Compute the best thresholds for classification, and get predictions on test data """
+    print(""" Compute the best thresholds for classification, and get predictions on test data """)
 
     network.computeBestThresholds(dev_data, dev_labels)
     predictions = network.getPredictions(test_data)
