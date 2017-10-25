@@ -51,7 +51,6 @@ def neuralTensorNetwork():
         data['e1'] = np.tile(training_data[batch_indices, 0], (1, corrupt_size)).T
 
         data['e2'] = np.tile(training_data[batch_indices, 2], (1, corrupt_size)).T
-        print num_entities
         data['e3'] = np.random.randint(num_entities, size=(batch_size * corrupt_size, 1))
 
         print(""" Optimize the network using the training batch """)

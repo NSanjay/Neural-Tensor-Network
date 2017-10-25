@@ -236,7 +236,6 @@ class NeuralTensorNetwork(object):
                 e2_neg = e2
 
             """ Initialize pre-activations of the tensor network as matrix of zeros"""
-            print num_rel_i
             preactivation_pos = np.zeros((self.slice_size, num_rel_i))
             preactivation_neg = np.zeros((self.slice_size, num_rel_i))
 
@@ -263,14 +262,9 @@ class NeuralTensorNetwork(object):
             score_pos = np.dot(U[i].T, activation_pos)
             score_neg = np.dot(U[i].T, activation_neg)
 
-            print score_neg, score_neg.shape
-            print score_pos, score_pos.shape
-
             """ Filter for examples that contribute to error """
 
             wrong_filter = (score_pos + 1 > score_neg)[0]
-            print wrong_filter
-            sys.exit(0)
 
             """ Add max-margin term to the cost """
 
