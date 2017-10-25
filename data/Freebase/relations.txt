@@ -1,0 +1,4 @@
+gender
+nationality
+profession
+place_of_death
