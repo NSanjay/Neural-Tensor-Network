@@ -15,7 +15,7 @@ def getTrainingData(file_name, entity_dictionary, relation_dictionary):
     """ Initialize training data as an empty matrix """
 
     num_examples = len(data)
-    training_data = np.empty((num_examples, 3))
+    training_data = np.empty((num_examples, 3), dtype=int)
 
     index = 0
 
@@ -36,6 +36,7 @@ def getTrainingData(file_name, entity_dictionary, relation_dictionary):
 
 """ Read and construct test data, using entity and relation dictionaries """
 
+
 def getTestData(file_name, entity_dictionary, relation_dictionary):
 
     """ Read and split data linewise """
@@ -46,7 +47,7 @@ def getTestData(file_name, entity_dictionary, relation_dictionary):
     """ Initialize test data and labels as empty matrices """
 
     num_entries = len(data)
-    test_data = np.empty((num_entries, 3))
+    test_data = np.empty((num_entries, 3), dtype=int)
     labels = np.empty((num_entries, 1))
 
     index = 0

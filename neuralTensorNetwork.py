@@ -421,7 +421,7 @@ class NeuralTensorNetwork(object):
             """ Extract required information from 'dev_data' """
 
             rel = dev_data[i, 1]
-            entity_vector_e1  = entity_vectors[:, dev_data[i, 0]].reshape(self.embedding_size, 1)
+            entity_vector_e1 = entity_vectors[:, dev_data[i, 0]].reshape(self.embedding_size, 1)
             entity_vector_e2  = entity_vectors[:, dev_data[i, 2]].reshape(self.embedding_size, 1)
 
             """ Stack the entity vectors one over the other """
