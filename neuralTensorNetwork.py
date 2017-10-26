@@ -54,7 +54,6 @@ class NeuralTensorNetwork(object):
             U[i] = np.ones((self.slice_size, 1))
 
         """ Unroll the parameters into a vector """
-
         self.theta, self.decode_info = self.stackToParams(W, V, b, U, word_vectors)
 
     #######################################################################################
@@ -201,11 +200,12 @@ class NeuralTensorNetwork(object):
         W_grad = {}; V_grad = {}; b_grad = {}; U_grad = {}
 
         for i in range(self.num_relations):
+            print "relation: "+str(i)
 
             """ Make a list of examples for the 'i'th relation """
 
             rel_i_list = (data_batch['rel'] == i)
-            num_rel_i = np.sum(rel_i_list)
+            num_rel_i = np.sum(rel_i_list) #number of triples with relation i from training data
             """ Get entity lists for examples of 'i'th relation """
 
             e1 = data_batch['e1'][rel_i_list]
@@ -213,9 +213,9 @@ class NeuralTensorNetwork(object):
             e3 = data_batch['e3'][rel_i_list]
 
             """ Get entity vectors for examples of 'i'th relation """
-            entity_vectors_e1 = entity_vectors[:, map(int, e1.tolist())]
-            entity_vectors_e2 = entity_vectors[:, map(int, e2.tolist())]
-            entity_vectors_e3 = entity_vectors[:, map(int, e3.tolist())]
+            entity_vectors_e1 = entity_vectors[:,  e1.tolist()]
+            entity_vectors_e2 = entity_vectors[:,  e2.tolist()]
+            entity_vectors_e3 = entity_vectors[:,  e3.tolist()]
 
             """ Choose entity vectors and lists based on 'flip' """
 
@@ -236,9 +236,10 @@ class NeuralTensorNetwork(object):
             """ Initialize pre-activations of the tensor network as matrix of zeros"""
             preactivation_pos = np.zeros((self.slice_size, num_rel_i))
             preactivation_neg = np.zeros((self.slice_size, num_rel_i))
-
+            print "number of relations: "+str(num_rel_i)
             """ Add contributuion of term containing 'W' """
 
+            #e1*W*e2
             for slice in range(self.slice_size):
                 preactivation_pos[slice, :] = np.sum(entity_vectors_e1 * np.dot(W[i][:, :, slice], entity_vectors_e2),\
                                                      axis=0)
@@ -247,26 +248,32 @@ class NeuralTensorNetwork(object):
 
             """ Add contributions of terms containing 'V' and 'b' """
 
+            # e1*W*e2 + b + V.[e1 e2].T
             preactivation_pos += b[i].T + np.dot(V[i].T, np.vstack((entity_vectors_e1, entity_vectors_e2)))
             preactivation_neg += b[i].T + np.dot(V[i].T, np.vstack((entity_vectors_e1_neg, entity_vectors_e2_neg)))
 
             """ Apply the activation funtion """
-
+            #f(e1*W*e2 + b + V.[e1 e2].T)
             activation_pos = self.activationFunction(preactivation_pos)
             activation_neg = self.activationFunction(preactivation_neg)
 
+            # score = u*f(e1*W*e2 + b + V.[e1 e2].T)
             """ Calculate scores for positive and negative examples """
-
             score_pos = np.dot(U[i].T, activation_pos)
             score_neg = np.dot(U[i].T, activation_neg)
+            print score_pos, score_pos.shape
+            print score_neg, score_neg.shape
 
-            """ Filter for examples that contribute to error """
+            # Score for  each of the triple relation, positive and negative is obtained
+
+            """ Filter for examples that contribute to error??? """
 
             wrong_filter = (score_pos + 1 > score_neg)[0]
-
+            print wrong_filter, wrong_filter.shape, wrong_filter.dtype
             """ Add max-margin term to the cost """
 
             cost += np.sum(wrong_filter * (score_pos - score_neg + 1)[0])
+            print cost
 
             """ Initialize 'W[i]' and 'V[i]' gradients as matrix of zeros """
 
@@ -276,8 +283,19 @@ class NeuralTensorNetwork(object):
             """ Number of examples contributing to error """
 
             num_wrong = np.sum(wrong_filter)
+            print num_wrong
 
             """ Filter matrices using 'wrong_filter' """
+            #The [:, :] stands for everything from the beginning to the end just like for lists.
+            # The difference is that the first : stands for first and the second : for the second dimension.
+            # In[135]: a[:, 1] = 4
+            #
+            # In[136]: a
+            # Out[136]:
+            # array([[0., 4., 0.],
+            #        [3., 4., 3.],
+            #        [0., 4., 0.]])
+            print activation_neg.shape
 
             activation_pos = activation_pos[:, wrong_filter]
             activation_neg = activation_neg[:, wrong_filter]
@@ -292,6 +310,8 @@ class NeuralTensorNetwork(object):
             e2 = e2[wrong_filter]
             e1_neg = e1_neg[wrong_filter]
             e2_neg = e2_neg[wrong_filter]
+
+            #Take derivative with respect to five group of parameters(W,V,b,u,f)
 
             """ Calculate 'U[i]' gradient """
 
@@ -309,6 +329,8 @@ class NeuralTensorNetwork(object):
             """ Variables required for sparse matrix calculation """
 
             values = np.ones(num_wrong)
+
+            #Return evenly spaced values within a given interval.
             rows = np.arange(num_wrong + 1)
 
             """ Calculate sparse matrices useful for gradient calculation """
@@ -364,7 +386,6 @@ class NeuralTensorNetwork(object):
         """ Calculate word vector gradients from entity gradients """
 
         for entity in range(self.num_entities):
-
             entity_len = len(self.word_indices[entity])
             word_vector_grad[:, self.word_indices[entity]] += \
                 np.tile(entity_vector_grad[:, entity].reshape(self.embedding_size, 1) / entity_len, (1, entity_len))
@@ -382,7 +403,7 @@ class NeuralTensorNetwork(object):
 
         cost += 0.5 * self.lamda * np.sum(theta * theta)
         theta_grad += self.lamda * theta
-
+        print "cost after gradient: " +str(cost)
         return cost, theta_grad
 
     #######################################################################################
@@ -414,7 +435,7 @@ class NeuralTensorNetwork(object):
 
             rel = dev_data[i, 1]
             entity_vector_e1 = entity_vectors[:, dev_data[i, 0]].reshape(self.embedding_size, 1)
-            entity_vector_e2  = entity_vectors[:, dev_data[i, 2]].reshape(self.embedding_size, 1)
+            entity_vector_e2 = entity_vectors[:, dev_data[i, 2]].reshape(self.embedding_size, 1)
 
             """ Stack the entity vectors one over the other """
 
@@ -444,7 +465,7 @@ class NeuralTensorNetwork(object):
             best_accuracies[i, :] = -1
 
         score_temp = score_min
-        interval   = 0.01
+        interval = 0.01
 
         """ Check for the best accuracy at intervals between 'score_min' and 'score_max' """
 
@@ -454,8 +475,8 @@ class NeuralTensorNetwork(object):
 
                 """ Check accuracy for 'i'th relation at 'score_temp' """
 
-                rel_i_list    = (dev_data[:, 1] == i)
-                predictions   = (dev_scores[rel_i_list, 0] <= score_temp) * 2 - 1
+                rel_i_list = (dev_data[:, 1] == i)
+                predictions = (dev_scores[rel_i_list, 0] <= score_temp) * 2 - 1
                 temp_accuracy = np.mean((predictions == dev_labels[rel_i_list, 0]))
 
                 """ If the accuracy is better, update the threshold and accuracy values """
@@ -505,7 +526,7 @@ class NeuralTensorNetwork(object):
             """ Stack the entity vectors one over the other """
 
             entity_stack = np.vstack((entity_vector_e1, entity_vector_e2))
-            test_score   = 0
+            test_score = 0
 
             """ Calculate the prediction score for the 'i'th example """
 

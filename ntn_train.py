@@ -19,11 +19,13 @@ def neuralTensorNetwork():
         data_set = 'data/Freebase/'
 
     print(""" Get entity and relation data dictionaries """)
-    entity_dictionary, num_entities = getDictionary('entities.txt')
-    relation_dictionary, num_relations = getDictionary('relations.txt')
+    entity_dictionary, num_entities = getDictionary(data_set+'entities.txt')
+    relation_dictionary, num_relations = getDictionary(data_set+'relations.txt')
+    print entity_dictionary, relation_dictionary
 
     print(""" Get training data using entity and relation dictionaries """)
-    training_data, num_examples = getTrainingData(data_set+'train.txt', entity_dictionary, relation_dictionary)
+    training_data, num_training_examples = getTrainingData(data_set+'train.txt', entity_dictionary, relation_dictionary)
+    print training_data
 
     print(""" Get word indices for all the entities in the data """)
     word_indices, num_words = getWordIndices('wordIndices.p')
@@ -32,7 +34,7 @@ def neuralTensorNetwork():
 
     program_parameters['num_entities'] = num_entities
     program_parameters['num_relations'] = num_relations
-    program_parameters['num_examples'] = num_examples
+    program_parameters['num_training_examples'] = num_training_examples
     program_parameters['num_words'] = num_words
     program_parameters['word_indices'] = word_indices
 
@@ -45,7 +47,7 @@ def neuralTensorNetwork():
         print(""" Create a training batch by picking up random samples from training data """)
         print(str(datetime.datetime.now()))
 
-        batch_indices = np.random.randint(num_examples, size=batch_size) #Randomly sample training batch
+        batch_indices = np.random.randint(num_training_examples, size=batch_size) #Randomly sample training batch
 
         data = dict()
         data['rel'] = np.tile(training_data[batch_indices, 1], (1, corrupt_size)).T
@@ -53,6 +55,7 @@ def neuralTensorNetwork():
 
         data['e2'] = np.tile(training_data[batch_indices, 2], (1, corrupt_size)).T
         data['e3'] = np.random.randint(num_entities, size=(batch_size * corrupt_size, 1))
+
 
         print(""" Optimize the network using the training batch """)
 
@@ -62,9 +65,11 @@ def neuralTensorNetwork():
         else:
             opt_solution = scipy.optimize.minimize(network.neuralTensorNetworkCost, network.theta, args=(data, 1,), \
                                                    method='L-BFGS-B', jac=True, options={'maxiter': batch_iterations})
-
+        print opt_solution
+        sys.exit(0)
         print(""" Store the optimized theta value """)
 
+        #self.stackToParams(W, V, b, U, word_vectors)
         network.theta = opt_solution.x
 
     print(""" Get test data to calculate predictions """)
@@ -73,8 +78,9 @@ def neuralTensorNetwork():
     test_data, test_labels = getTestData('test.txt', entity_dictionary, relation_dictionary)
 
     print(""" Compute the best thresholds for classification, and get predictions on test data """)
-
+    
     network.computeBestThresholds(dev_data, dev_labels)
+
     predictions = network.getPredictions(test_data)
 
     """ Print accuracy of the obtained predictions """
