@@ -235,7 +235,7 @@ class NeuralTensorNetwork(object):
             """ Initialize pre-activations of the tensor network as matrix of zeros"""
             preactivation_pos = np.zeros((self.slice_size, num_rel_i))
             preactivation_neg = np.zeros((self.slice_size, num_rel_i))
-            print "number of relations: "+str(num_rel_i)
+            # print "number of relations: "+str(num_rel_i)
             """ Add contributuion of term containing 'W' """
 
             #e1*W*e2
@@ -396,7 +396,7 @@ class NeuralTensorNetwork(object):
 
         cost += 0.5 * self.lamda * np.sum(theta * theta)
         theta_grad += self.lamda * theta
-        print "cost after gradient: " +str(cost)
+        # print "cost after gradient: " +str(cost)
         return cost, theta_grad
 
     #######################################################################################

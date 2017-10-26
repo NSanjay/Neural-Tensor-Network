@@ -21,11 +21,9 @@ def neuralTensorNetwork():
     print(""" Get entity and relation data dictionaries """)
     entity_dictionary, num_entities = getDictionary(data_set+'entities.txt')
     relation_dictionary, num_relations = getDictionary(data_set+'relations.txt')
-    print entity_dictionary, relation_dictionary
 
     print(""" Get training data using entity and relation dictionaries """)
     training_data, num_training_examples = getTrainingData(data_set+'train.txt', entity_dictionary, relation_dictionary)
-    print training_data
 
     print(""" Get word indices for all the entities in the data """)
     word_indices, num_words = getWordIndices('wordIndices.p')
@@ -85,5 +83,8 @@ def neuralTensorNetwork():
     """ Print accuracy of the obtained predictions """
 
     print "Accuracy:", np.mean((predictions == test_labels))
+    f = open('accuracy.txt','a')
+    f.write(np.mean((predictions == test_labels)))
+
 
 neuralTensorNetwork()
