@@ -46,7 +46,6 @@ class NeuralTensorNetwork(object):
         W = {}; V = {}; b = {}; U = {};
 
         for i in range(self.num_relations):
-
             """ Initialize tensor network parameters """
 
             W[i] = np.random.random((self.embedding_size, self.embedding_size, self.slice_size)) * 2 * r - r
@@ -192,7 +191,6 @@ class NeuralTensorNetwork(object):
         """ Assign entity vectors to be the mean of word vectors involved """
         for entity in range(self.num_entities):
             entity_vectors[:, entity] = np.mean(word_vectors[:, self.word_indices[entity]], axis=1)
-
 
         """ Initialize cost as zero """
 

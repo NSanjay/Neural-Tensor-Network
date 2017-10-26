@@ -1,6 +1,7 @@
 from load_params import *
 from neuralTensorNetwork import *
 
+
 def neuralTensorNetwork():
 
     print(""" Get the program parameters """)
@@ -13,17 +14,16 @@ def neuralTensorNetwork():
     batch_iterations = program_parameters['batch_iterations']
     data_set = program_parameters['data_set']
     if data_set == 0:
-        data_set = 'Wordnet/'
+        data_set = 'data/Wordnet/'
     else:
-        data_set = 'Freebase/'
+        data_set = 'data/Freebase/'
 
     print(""" Get entity and relation data dictionaries """)
-    entity_dictionary, num_entities = getDictionary('data/'+data_set+'entities.txt')
-    relation_dictionary, num_relations = getDictionary('data/'+data_set+'relations.txt')
+    entity_dictionary, num_entities = getDictionary('entities.txt')
+    relation_dictionary, num_relations = getDictionary('relations.txt')
 
     print(""" Get training data using entity and relation dictionaries """)
-    training_data, num_examples = getTrainingData('data/'+data_set+'train.txt', entity_dictionary, relation_dictionary)
-    print num_examples
+    training_data, num_examples = getTrainingData(data_set+'train.txt', entity_dictionary, relation_dictionary)
 
     print(""" Get word indices for all the entities in the data """)
     word_indices, num_words = getWordIndices('wordIndices.p')
@@ -45,7 +45,8 @@ def neuralTensorNetwork():
         print(""" Create a training batch by picking up random samples from training data """)
         print(str(datetime.datetime.now()))
 
-        batch_indices = np.random.randint(num_examples, size=batch_size)
+        batch_indices = np.random.randint(num_examples, size=batch_size) #Randomly sample training batch
+
         data = dict()
         data['rel'] = np.tile(training_data[batch_indices, 1], (1, corrupt_size)).T
         data['e1'] = np.tile(training_data[batch_indices, 0], (1, corrupt_size)).T
@@ -56,11 +57,11 @@ def neuralTensorNetwork():
         print(""" Optimize the network using the training batch """)
 
         if np.random.random() < 0.5:
-            opt_solution = scipy.optimize.minimize(network.neuralTensorNetworkCost, network.theta,
-                                                   args=(data, 0,), method='L-BFGS-B', jac=True, options={'maxiter': batch_iterations})
+            opt_solution = scipy.optimize.minimize(network.neuralTensorNetworkCost, network.theta, args=(data, 0,),\
+                                                   method='L-BFGS-B', jac=True, options={'maxiter': batch_iterations})
         else:
-            opt_solution = scipy.optimize.minimize(network.neuralTensorNetworkCost, network.theta,
-                                                   args=(data, 1,), method='L-BFGS-B', jac=True, options={'maxiter': batch_iterations})
+            opt_solution = scipy.optimize.minimize(network.neuralTensorNetworkCost, network.theta, args=(data, 1,), \
+                                                   method='L-BFGS-B', jac=True, options={'maxiter': batch_iterations})
 
         print(""" Store the optimized theta value """)
 
