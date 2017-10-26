@@ -200,7 +200,6 @@ class NeuralTensorNetwork(object):
         W_grad = {}; V_grad = {}; b_grad = {}; U_grad = {}
 
         for i in range(self.num_relations):
-            print "relation: "+str(i)
 
             """ Make a list of examples for the 'i'th relation """
 
@@ -261,19 +260,15 @@ class NeuralTensorNetwork(object):
             """ Calculate scores for positive and negative examples """
             score_pos = np.dot(U[i].T, activation_pos)
             score_neg = np.dot(U[i].T, activation_neg)
-            print score_pos, score_pos.shape
-            print score_neg, score_neg.shape
 
             # Score for  each of the triple relation, positive and negative is obtained
 
             """ Filter for examples that contribute to error??? """
 
             wrong_filter = (score_pos + 1 > score_neg)[0]
-            print wrong_filter, wrong_filter.shape, wrong_filter.dtype
             """ Add max-margin term to the cost """
 
             cost += np.sum(wrong_filter * (score_pos - score_neg + 1)[0])
-            print cost
 
             """ Initialize 'W[i]' and 'V[i]' gradients as matrix of zeros """
 
@@ -283,7 +278,6 @@ class NeuralTensorNetwork(object):
             """ Number of examples contributing to error """
 
             num_wrong = np.sum(wrong_filter)
-            print num_wrong
 
             """ Filter matrices using 'wrong_filter' """
             #The [:, :] stands for everything from the beginning to the end just like for lists.
@@ -295,7 +289,6 @@ class NeuralTensorNetwork(object):
             # array([[0., 4., 0.],
             #        [3., 4., 3.],
             #        [0., 4., 0.]])
-            print activation_neg.shape
 
             activation_pos = activation_pos[:, wrong_filter]
             activation_neg = activation_neg[:, wrong_filter]

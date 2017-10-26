@@ -66,7 +66,6 @@ def neuralTensorNetwork():
             opt_solution = scipy.optimize.minimize(network.neuralTensorNetworkCost, network.theta, args=(data, 1,), \
                                                    method='L-BFGS-B', jac=True, options={'maxiter': batch_iterations})
         print opt_solution
-        sys.exit(0)
         print(""" Store the optimized theta value """)
 
         #self.stackToParams(W, V, b, U, word_vectors)
