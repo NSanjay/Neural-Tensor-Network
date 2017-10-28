@@ -515,7 +515,7 @@ class NeuralTensorNetwork(object):
             for k in range(self.slice_size):
 
                 dev_scores[i, 0] += U[rel][k, 0] * \
-                                    (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
+                                    (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
                                      np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
 
         """ Minimum and maximum of the prediction scores """
@@ -602,7 +602,7 @@ class NeuralTensorNetwork(object):
             for k in range(self.slice_size):
 
                 test_score += U[rel][k, 0] * \
-                              (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
+                              (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
                                np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
 
             """ Give predictions based on previously calculate thresholds """
