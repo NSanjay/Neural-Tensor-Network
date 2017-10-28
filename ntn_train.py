@@ -83,8 +83,10 @@ def neuralTensorNetwork():
     """ Print accuracy of the obtained predictions """
 
     print "Accuracy:", np.mean((predictions == test_labels))
+    accuracy = np.mean((predictions == test_labels))
     f = open('accuracy.txt','a')
-    f.write(np.mean((predictions == test_labels)))
+    f.write(str(accuracy))
+    f.close()
 
 
 neuralTensorNetwork()
