@@ -63,7 +63,7 @@ def neuralTensorNetwork():
         else:
             opt_solution = scipy.optimize.minimize(network.neuralTensorNetworkCost, network.theta, args=(data, 1,), \
                                                    method='L-BFGS-B', jac=True, options={'maxiter': batch_iterations})
-        print opt_solution
+        # print opt_solution
         print(""" Store the optimized theta value """)
 
         #self.stackToParams(W, V, b, U, word_vectors)
@@ -84,8 +84,8 @@ def neuralTensorNetwork():
 
     print "Accuracy:", np.mean((predictions == test_labels))
     accuracy = np.mean((predictions == test_labels))
-    f = open('accuracy2.txt','a')
-    f.write(str(accuracy)+'\n')
+    f = open('accuracy.txt', 'a')
+    f.write(str(datetime.datetime.now()) + '\t' + str(accuracy)+'\n')
     f.close()
 
 
