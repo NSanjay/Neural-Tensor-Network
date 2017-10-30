@@ -116,5 +116,7 @@ def getWordIndices(file_name):
 
     num_words = word_dictionary['num_words']
     word_indices = word_dictionary['word_indices']
+    # print num_words, len(word_indices)
+    # print word_indices[:10]
 
     return word_indices, num_words

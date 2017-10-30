@@ -26,7 +26,7 @@ def neuralTensorNetwork():
     training_data, num_training_examples = getTrainingData(data_set+'train.txt', entity_dictionary, relation_dictionary)
 
     print(""" Get word indices for all the entities in the data """)
-    word_indices, num_words = getWordIndices('wordIndices.p')
+    word_indices, num_words = getWordIndices(data_set+'wordIndices.p')
 
     print(""" Store newly learned data in the dictionary """)
 
@@ -71,8 +71,8 @@ def neuralTensorNetwork():
 
     print(""" Get test data to calculate predictions """)
 
-    dev_data, dev_labels = getTestData('dev.txt', entity_dictionary, relation_dictionary)
-    test_data, test_labels = getTestData('test.txt', entity_dictionary, relation_dictionary)
+    dev_data, dev_labels = getTestData(data_set+'dev.txt', entity_dictionary, relation_dictionary)
+    test_data, test_labels = getTestData(data_set+'test.txt', entity_dictionary, relation_dictionary)
 
     print(""" Compute the best thresholds for classification, and get predictions on test data """)
     
