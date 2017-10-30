@@ -189,11 +189,9 @@ class NeuralTensorNetwork(object):
         entity_vector_grad = np.zeros((self.embedding_size, self.num_entities))
 
 
-
         """ Assign entity vectors to be the mean of word vectors involved """
         for entity in range(self.num_entities):
             entity_vectors[:, entity] = np.mean(word_vectors[:, self.word_indices[entity]], axis=1)
-
         """ Initialize cost as zero """
 
         cost = 0
@@ -558,7 +556,7 @@ class NeuralTensorNetwork(object):
             score_temp += interval
 
         """ Store the threshold values to be used later """
-
+        print "Best Threshold: " + str(best_thresholds)
         self.best_thresholds = best_thresholds
 
         #######################################################################################
