@@ -236,10 +236,11 @@ class NeuralTensorNetwork(object):
             """ Initialize pre-activations of the tensor network as matrix of zeros"""
             preactivation_pos = np.zeros((self.slice_size, num_rel_i))
             preactivation_neg = np.zeros((self.slice_size, num_rel_i))
-            # print "number of relations: "+str(num_rel_i)
-            # """ Add contributuion of term containing 'W' """
-            #
+
+
+            """ Add contributuion of term containing 'W' """
             # #e1*W*e2
+
             # for slice in range(self.slice_size):
             #     preactivation_pos[slice, :] = np.sum(entity_vectors_e1 * np.dot(W[i][:, :, slice], entity_vectors_e2),\
             #                                          axis=0)
@@ -481,6 +482,9 @@ class NeuralTensorNetwork(object):
         """ Get stack of network parameters """
 
         W, V, b, U, word_vectors = self.paramsToStack(self.theta)
+        # print self.theta.shape
+        np.savetxt('theta.txt', self.theta)
+        # print type(self.theta)
 
         """ Initialize entity vectors as matrix of zeros """
 
@@ -556,8 +560,11 @@ class NeuralTensorNetwork(object):
             score_temp += interval
 
         """ Store the threshold values to be used later """
-        print "Best Threshold: " + str(best_thresholds)
+        # print "Best Threshold: " + str(best_thresholds)
         self.best_thresholds = best_thresholds
+        # print self.best_thresholds
+        # print type(self.best_thresholds)
+        np.savetxt('thresholds.txt', self.best_thresholds)
 
         #######################################################################################
     """ Returns predictions for the passed test data """

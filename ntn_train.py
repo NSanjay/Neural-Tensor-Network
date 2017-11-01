@@ -13,11 +13,12 @@ def neuralTensorNetwork():
     corrupt_size = program_parameters['corrupt_size']
     batch_iterations = program_parameters['batch_iterations']
     data_set = program_parameters['data_set']
+    w_param = program_parameters['w_param']
     if data_set == 0:
         data_set = 'data/Wordnet/'
     else:
         data_set = 'data/Freebase/'
-
+    print data_set
     print(""" Get entity and relation data dictionaries """)
     entity_dictionary, num_entities = getDictionary(data_set+'entities.txt')
     relation_dictionary, num_relations = getDictionary(data_set+'relations.txt')
@@ -40,10 +41,11 @@ def neuralTensorNetwork():
 
     network = NeuralTensorNetwork(program_parameters)
 
+    start_time = datetime.datetime.now()
     for i in range(num_iterations):
         print i
-        print(""" Create a training batch by picking up random samples from training data """)
-        print(str(datetime.datetime.now()))
+        # print(""" Create a training batch by picking up random samples from training data """)
+        print str(start_time)
 
         batch_indices = np.random.randint(num_training_examples, size=batch_size) #Randomly sample training batch
 

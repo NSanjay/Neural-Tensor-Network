@@ -13,7 +13,8 @@ def getProgramParameters():
     program_parameters['activation_function'] = 0      # 0 - tanh, 1 - sigmoid
     program_parameters['lamda'] = 0.0001   # regulariization parameter
     program_parameters['batch_iterations'] = 5      # optimization iterations for each batch
-    program_parameters['data_set'] = 1      # 0-Wordnet 1-Freebase
+    program_parameters['data_set'] = 0      # 0-Wordnet 1-Freebase
+    program_parameters['w_param'] = 1  # 0-original 1-modified
 
     return program_parameters
 
