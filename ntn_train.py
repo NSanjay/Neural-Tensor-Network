@@ -74,11 +74,12 @@ def neuralTensorNetwork():
     print(""" Get test data to calculate predictions """)
 
     dev_data, dev_labels = getTestData(data_set+'dev.txt', entity_dictionary, relation_dictionary)
+
     test_data, test_labels = getTestData(data_set+'test.txt', entity_dictionary, relation_dictionary)
 
     print(""" Compute the best thresholds for classification, and get predictions on test data """)
     
-    network.computeBestThresholds(dev_data, dev_labels)
+    network.computeBestThresholds(dev_data, dev_labels, data_set)
 
     predictions = network.getPredictions(test_data)
 

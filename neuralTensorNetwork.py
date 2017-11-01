@@ -9,6 +9,7 @@ import scipy.optimize
 import scipy.sparse as sp
 import datetime
 from load_data import *
+import cPickle as pickle
 
 
 ###########################################################################################
@@ -178,7 +179,6 @@ class NeuralTensorNetwork(object):
 
 
     def neuralTensorNetworkCost(self, theta, data_batch, flip):
-
         """ Get stack of network parameters """
 
         W, V, b, U, word_vectors = self.paramsToStack(theta)
@@ -477,14 +477,15 @@ class NeuralTensorNetwork(object):
     #######################################################################################
     """ Calculates the best thresholds for classification """
 
-    def computeBestThresholds(self, dev_data, dev_labels):
+    def computeBestThresholds(self, dev_data, dev_labels, data_set):
 
         """ Get stack of network parameters """
-
         W, V, b, U, word_vectors = self.paramsToStack(self.theta)
-        # print self.theta.shape
-        np.savetxt('theta.txt', self.theta)
-        # print type(self.theta)
+
+        np.savetxt(data_set+'theta.txt', self.theta)
+
+        with open(data_set+'decode_info.p', 'wb') as fp:
+            pickle.dump(self.decode_info, fp)
 
         """ Initialize entity vectors as matrix of zeros """
 
@@ -564,7 +565,7 @@ class NeuralTensorNetwork(object):
         self.best_thresholds = best_thresholds
         # print self.best_thresholds
         # print type(self.best_thresholds)
-        np.savetxt('thresholds.txt', self.best_thresholds)
+        np.savetxt(data_set+'thresholds.txt', self.best_thresholds)
 
         #######################################################################################
     """ Returns predictions for the passed test data """
