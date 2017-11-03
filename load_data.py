@@ -22,7 +22,6 @@ def getTrainingData(file_name, entity_dictionary, relation_dictionary):
     for line in data:
 
         """ Obtain relation example text by splitting line """
-
         entity1, relation, entity2 = line.split()
 
         """ Assign indices to the obtained entities and relation """

@@ -8,12 +8,12 @@ def getProgramParameters():
     program_parameters['embedding_size'] = 100    # size of a single word vector
     program_parameters['slice_size'] = 3      # number of slices in tensor
     program_parameters['num_iterations'] = 500    # number of optimization iterations
-    program_parameters['batch_size'] = 20000  # training batch size
+    program_parameters['batch_size'] = 20  # training batch size
     program_parameters['corrupt_size'] = 10     # corruption size
     program_parameters['activation_function'] = 0      # 0 - tanh, 1 - sigmoid
     program_parameters['lamda'] = 0.0001   # regulariization parameter
     program_parameters['batch_iterations'] = 5      # optimization iterations for each batch
-    program_parameters['data_set'] = 1      # 0-Wordnet 1-Freebase
+    program_parameters['data_set'] = 2      # 0-Wordnet 1-Freebase 2-DBpedia
     program_parameters['w_param'] = 1  # 0-original 1-modified
 
     return program_parameters

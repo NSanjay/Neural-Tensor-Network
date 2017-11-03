@@ -1,0 +1,7 @@
+birthPlace
+parent
+almaMater
+child
+founders
+nationality
+spouse

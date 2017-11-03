@@ -33,6 +33,7 @@ class NeuralTensorNetwork(object):
         self.word_indices = program_parameters['word_indices']
         self.activation_function = program_parameters['activation_function']
         self.lamda = program_parameters['lamda']
+        self.w_param = program_parameters['w_param']
 
         """ Initialize word vectors randomly with each element in the range [-r, r] """
 
@@ -48,9 +49,10 @@ class NeuralTensorNetwork(object):
 
         for i in range(self.num_relations):
             """ Initialize tensor network parameters """
-
-            # W[i] = np.random.random((self.embedding_size, self.embedding_size, self.slice_size)) * 2 * r - r
-            W[i] = np.random.random((2*self.embedding_size, 2*self.embedding_size, self.slice_size)) * 2 * r - r
+            if self.w_param == 0:
+                W[i] = np.random.random((self.embedding_size, self.embedding_size, self.slice_size)) * 2 * r - r
+            else:
+                W[i] = np.random.random((2*self.embedding_size, 2*self.embedding_size, self.slice_size)) * 2 * r - r
             V[i] = np.zeros((2 * self.embedding_size, self.slice_size))
             b[i] = np.zeros((1, self.slice_size))
             U[i] = np.ones((self.slice_size, 1))
@@ -172,7 +174,7 @@ class NeuralTensorNetwork(object):
 
             """ If activation function is sigmoid """
 
-            return (x * (1 - x))
+            return (x*(1-x))
 
     #######################################################################################
     """ Returns cost and parameter gradients for a given batch of data """
@@ -192,8 +194,8 @@ class NeuralTensorNetwork(object):
         """ Assign entity vectors to be the mean of word vectors involved """
         for entity in range(self.num_entities):
             entity_vectors[:, entity] = np.mean(word_vectors[:, self.word_indices[entity]], axis=1)
-        """ Initialize cost as zero """
 
+        """ Initialize cost as zero """
         cost = 0
 
         """ Make dictionaries for parameter gradients """
@@ -237,63 +239,29 @@ class NeuralTensorNetwork(object):
             preactivation_pos = np.zeros((self.slice_size, num_rel_i))
             preactivation_neg = np.zeros((self.slice_size, num_rel_i))
 
+            """ If Add contributuion of term containing 'W' e1*W*e2 """
+            """ Else Add contributuion of term containing 'W' stacking entity1 and entity2 """
+            stacked_entity_vectors = np.vstack((entity_vectors_e1, entity_vectors_e2))
+            stacked_entity_vectors_neg = np.vstack((entity_vectors_e1_neg, entity_vectors_e2_neg))
 
-            """ Add contributuion of term containing 'W' """
-            # #e1*W*e2
-
-            # for slice in range(self.slice_size):
-            #     preactivation_pos[slice, :] = np.sum(entity_vectors_e1 * np.dot(W[i][:, :, slice], entity_vectors_e2),\
-            #                                          axis=0)
-            #     print entity_vectors_e1.shape
-            #     print W[i][:, :, slice].shape
-            #     print entity_vectors_e2.shape
-            #     print "--------------"
-            #     print np.dot(W[i][:, :, slice], entity_vectors_e2).shape
-            #     dot_pr = np.dot(W[i][:, :, slice], entity_vectors_e2)
-            #     print entity_vectors_e1.shape, dot_pr.shape
-            #     mul = entity_vectors_e1 * dot_pr
-            #     print mul.shape
-            #     print mul
-            #     print np.sum(mul)
-            #     print preactivation_pos[slice, :]
-            #     print preactivation_pos[slice, :].shape
-            #
-            #     sys.exit(0)
-            #     preactivation_neg[slice, :] = np.sum(entity_vectors_e1_neg * np.dot(W[i][:, :, slice],\
-            #                                                                         entity_vectors_e2_neg), axis=0)
-
-            """ Add contributuion of term containing 'W' stacking entity1 and entity2 """
-
-            # e1*W*e2
-            for slice in range(self.slice_size):
-                stacked_entity_vectors = np.vstack((entity_vectors_e1, entity_vectors_e2))
-                stacked_entity_vectors_neg = np.vstack((entity_vectors_e1_neg, entity_vectors_e2_neg))
-                # print stacked_entity_vectors.shape
-                preactivation_pos[slice, :] = np.sum(stacked_entity_vectors * np.dot(W[i][:, :, slice], stacked_entity_vectors), \
-                                                     axis=0)
-                # print stacked_entity_vectors.shape
-                # print W[i][:, :, slice].shape
-                # print stacked_entity_vectors.shape
-                # print "--------------"
-                # print np.dot(W[i][:, :, slice], stacked_entity_vectors).shape
-                # dot_pr = np.dot(W[i][:, :, slice], stacked_entity_vectors)
-                # print stacked_entity_vectors.shape, dot_pr.shape
-                # mul = stacked_entity_vectors * dot_pr
-                # print mul.shape
-                # print mul
-                # print np.sum(mul)
-                # print preactivation_pos[slice, :]
-                # print preactivation_pos[slice, :].shape
-
-                # sys.exit(0)
-                preactivation_neg[slice, :] = np.sum(stacked_entity_vectors_neg * np.dot(W[i][:, :, slice], \
-                                                                                         stacked_entity_vectors_neg), axis=0)
+            if self.w_param == 0:
+                for slice in range(self.slice_size):
+                    preactivation_pos[slice, :] = np.sum(entity_vectors_e1 * np.dot(W[i][:, :, slice],\
+                                                                                    entity_vectors_e2), axis=0)
+                    preactivation_neg[slice, :] = np.sum(entity_vectors_e1_neg * np.dot(W[i][:, :, slice],\
+                                                                                        entity_vectors_e2_neg), axis=0)
+            else:
+                for slice in range(self.slice_size):
+                    preactivation_pos[slice, :] = np.sum(stacked_entity_vectors * np.dot(W[i][:, :, slice],\
+                                                                                         stacked_entity_vectors), axis=0)
+                    preactivation_neg[slice, :] = np.sum(stacked_entity_vectors_neg * np.dot(W[i][:, :, slice],\
+                                                                                             stacked_entity_vectors_neg), axis=0)
 
             """ Add contributions of terms containing 'V' and 'b' """
 
             # e1*W*e2 + b + V.[e1 e2].T
-            preactivation_pos += b[i].T + np.dot(V[i].T, np.vstack((entity_vectors_e1, entity_vectors_e2)))
-            preactivation_neg += b[i].T + np.dot(V[i].T, np.vstack((entity_vectors_e1_neg, entity_vectors_e2_neg)))
+            preactivation_pos += b[i].T + np.dot(V[i].T, stacked_entity_vectors)
+            preactivation_neg += b[i].T + np.dot(V[i].T, stacked_entity_vectors_neg)
 
             """ Apply the activation funtion """
             #f(e1*W*e2 + b + V.[e1 e2].T)
@@ -304,8 +272,6 @@ class NeuralTensorNetwork(object):
             """ Calculate scores for positive and negative examples """
             score_pos = np.dot(U[i].T, activation_pos)
             score_neg = np.dot(U[i].T, activation_neg)
-            # print score_neg
-            # print score_pos
             # Score for  each of the triple relation, positive and negative is obtained
 
             """ Filter for examples that contribute to error??? """
@@ -321,26 +287,15 @@ class NeuralTensorNetwork(object):
             V_grad[i] = np.zeros(V[i].shape)
 
             """ Number of examples contributing to error """
-
             num_wrong = np.sum(wrong_filter)
 
             """ Filter matrices using 'wrong_filter' """
-            #The [:, :] stands for everything from the beginning to the end just like for lists.
-            # The difference is that the first : stands for first and the second : for the second dimension.
-            # In[135]: a[:, 1] = 4
-            #
-            # In[136]: a
-            # Out[136]:
-            # array([[0., 4., 0.],
-            #        [3., 4., 3.],
-            #        [0., 4., 0.]])
-
             activation_pos = activation_pos[:, wrong_filter]
             activation_neg = activation_neg[:, wrong_filter]
-            entity_vectors_e1_rel = entity_vectors_e1[:, wrong_filter]
-            entity_vectors_e2_rel = entity_vectors_e2[:, wrong_filter]
-            entity_vectors_e1_rel_neg = entity_vectors_e1_neg[:, wrong_filter]
-            entity_vectors_e2_rel_neg = entity_vectors_e2_neg[:, wrong_filter]
+            entity_vectors_e1_wrong = entity_vectors_e1[:, wrong_filter]
+            entity_vectors_e2_wrong = entity_vectors_e2[:, wrong_filter]
+            entity_vectors_e1_wrong_neg = entity_vectors_e1_neg[:, wrong_filter]
+            entity_vectors_e2_wrong_neg = entity_vectors_e2_neg[:, wrong_filter]
 
             """ Filter entity lists using 'wrong_filter' """
 
@@ -353,7 +308,7 @@ class NeuralTensorNetwork(object):
 
             """ Calculate 'U[i]' gradient """
 
-            U_grad[i] = np.sum(activation_pos - activation_neg, axis = 1).reshape(self.slice_size, 1)
+            U_grad[i] = np.sum(activation_pos - activation_neg, axis=1).reshape(self.slice_size, 1)
 
             """ Calculate U * f'(z) terms useful for gradient calculation """
 
@@ -385,62 +340,51 @@ class NeuralTensorNetwork(object):
                 temp_pos = temp_pos_all[k, :].reshape(1, num_wrong)
                 temp_neg = temp_neg_all[k, :].reshape(1, num_wrong)
 
+                stacked_entity_vectors_rel = np.vstack((entity_vectors_e1_wrong, entity_vectors_e2_wrong))
+                stacked_entity_vectors_rel_neg = np.vstack((entity_vectors_e1_wrong_neg, entity_vectors_e2_wrong_neg))
+
                 # """ Calculate 'k'th slice of 'W[i]' gradient """
-                #
-                # W_grad[i][:, :, k] = np.dot(entity_vectors_e1_rel * temp_pos, entity_vectors_e2_rel.T) \
-                #                      + np.dot(entity_vectors_e1_rel_neg * temp_neg, entity_vectors_e2_rel_neg.T)
-                #
                 """ Calculate 'k'th slice of 'W[i]' stacked entity gradient """
-                stacked_entity_vectors_rel = np.vstack((entity_vectors_e1_rel, entity_vectors_e2_rel))
-                stacked_entity_vectors_rel_neg = np.vstack((entity_vectors_e1_rel_neg, entity_vectors_e2_rel_neg))
-                W_grad[i][:, :, k] = np.dot(stacked_entity_vectors_rel * temp_pos, stacked_entity_vectors_rel.T) \
-                                     + np.dot(stacked_entity_vectors_rel_neg * temp_neg, stacked_entity_vectors_rel_neg.T)
+
+                if self.w_param == 0:
+                    W_grad[i][:, :, k] = np.dot(entity_vectors_e1_wrong * temp_pos, entity_vectors_e2_wrong.T) \
+                                         + np.dot(entity_vectors_e1_wrong_neg * temp_neg, entity_vectors_e2_wrong_neg.T)
+                else:
+                    W_grad[i][:, :, k] = np.dot(stacked_entity_vectors_rel * temp_pos, stacked_entity_vectors_rel.T) + \
+                                         np.dot(stacked_entity_vectors_rel_neg * temp_neg, stacked_entity_vectors_rel_neg.T)
 
                 """ Calculate 'k'th slice of 'V[i]' gradient """
 
-                V_grad[i][:, k] = np.sum(np.vstack((entity_vectors_e1_rel, entity_vectors_e2_rel)) * temp_pos
-                                         + np.vstack((entity_vectors_e1_rel_neg, entity_vectors_e2_rel_neg)) * temp_neg, axis = 1)
+                V_grad[i][:, k] = np.sum(stacked_entity_vectors_rel * temp_pos + stacked_entity_vectors_rel_neg * \
+                                         temp_neg, axis=1)
 
                 """ Add contribution of 'V[i]' term in the entity vectors' gradient """
 
                 V_pos = V[i][:, k].reshape(2*self.embedding_size, 1) * temp_pos
                 V_neg = V[i][:, k].reshape(2*self.embedding_size, 1) * temp_neg
 
-                # entity_vector_grad += V_pos[:self.embedding_size, :] * e1_sparse + V_pos[self.embedding_size:, :] * e2_sparse \
-                #                       + V_neg[:self.embedding_size, :] * e1_neg_sparse + V_neg[self.embedding_size:, :] * e2_neg_sparse
-                #
-                entity_vector_grad += V_pos[:self.embedding_size, :] * e1_sparse + V_pos[self.embedding_size:, :] * e2_sparse \
-                                      + V_neg[:self.embedding_size, :] * e1_neg_sparse + V_neg[self.embedding_size:, :] * e2_neg_sparse
+                entity_vector_grad += V_pos[:self.embedding_size, :] * e1_sparse + V_pos[self.embedding_size:, :]\
+                                                                                   * e2_sparse + \
+                                      V_neg[:self.embedding_size, :] * e1_neg_sparse + V_neg[self.embedding_size:, :]\
+                                                                                       * e2_neg_sparse
 
                 """ Add contribution of 'W[i]' term in the entity vectors' gradient """
-                # print entity_vectors[:, e1_neg.tolist()].shape
-                # ab = np.dot(W[i][:, :, k].T, entity_vectors[:, e1_neg.tolist()])
-                # print ab.shape
-                # entity_vector_grad += (np.dot(W[i][:, :, k], entity_vectors[:, e2.tolist()]) * temp_pos) * e1_sparse \
-                #                       + (np.dot(W[i][:, :, k].T, entity_vectors[:, e1.tolist()]) * temp_pos) * e2_sparse \
-                #                       + (np.dot(W[i][:, :, k], entity_vectors[:, e2_neg.tolist()]) * temp_neg) * e1_neg_sparse \
-                #                       + (np.dot(W[i][:, :, k].T, entity_vectors[:, e1_neg.tolist()]) * temp_neg) * e2_neg_sparse
+                if self.w_param == 0:
+                    entity_vector_grad += (np.dot(W[i][:, :, k], entity_vectors[:, e2.tolist()]) * temp_pos) * e1_sparse \
+                                          + (np.dot(W[i][:, :, k].T, entity_vectors[:, e1.tolist()]) * temp_pos) * e2_sparse \
+                                          + (np.dot(W[i][:, :, k], entity_vectors[:, e2_neg.tolist()]) * temp_neg) * e1_neg_sparse \
+                                          + (np.dot(W[i][:, :, k].T, entity_vectors[:, e1_neg.tolist()]) * temp_neg) * e2_neg_sparse
+                else:
+                    l = (np.dot(W[i][:, :, k].T, np.vstack((entity_vectors[:, e1_neg.tolist()],\
+                                                            entity_vectors[:, e2_neg.tolist()]))) * temp_neg) * e2_neg_sparse
+                    m = (np.dot(W[i][:, :, k], np.vstack((entity_vectors[:, e1_neg.tolist()],\
+                                                          entity_vectors[:, e2_neg.tolist()]))) * temp_neg) * e1_neg_sparse
+                    n = (np.dot(W[i][:, :, k].T, np.vstack((entity_vectors[:, e1.tolist()],\
+                                                            entity_vectors[:, e2.tolist()]))) * temp_pos) * e2_sparse
+                    o = (np.dot(W[i][:, :, k], np.vstack((entity_vectors[:, e1.tolist()],\
+                                                          entity_vectors[:, e2.tolist()]))) * temp_pos) * e1_sparse
 
-                # print entity_vectors.shape
-                # print temp_neg.shape
-                # print e2_neg_sparse.shape
-                l = (np.dot(W[i][:, :, k].T, np.vstack((entity_vectors[:, e1_neg.tolist()],entity_vectors[:, e2_neg.tolist()]))) * temp_neg) * e2_neg_sparse
-                m = (np.dot(W[i][:, :, k], np.vstack((entity_vectors[:, e1_neg.tolist()],entity_vectors[:, e2_neg.tolist()]))) * temp_neg) * e1_neg_sparse
-                n = (np.dot(W[i][:, :, k].T, np.vstack((entity_vectors[:, e1.tolist()],entity_vectors[:, e2.tolist()]))) * temp_pos) * e2_sparse
-                o = (np.dot(W[i][:, :, k], np.vstack((entity_vectors[:, e1.tolist()],entity_vectors[:, e2.tolist()]))) * temp_pos) * e1_sparse
-                # print m.shape
-                # print l.shape
-                # print n.shape
-                # print entity_vector_grad.shape
-                entity_vector_grad += l[self.embedding_size:, :]+m[:self.embedding_size, :]+n[self.embedding_size:, :]+o[:self.embedding_size, :]
-                # print np.dot(W[i][:, :, k].T, np.vstack((entity_vectors[:, e1_neg.tolist()], entity_vectors[:, e2_neg.tolist()]))).shape
-                # l =(np.dot(W[i][:, :, k].T, np.vstack((entity_vectors[:, e1_neg.tolist()],entity_vectors[:, e2_neg.tolist()]))) * temp_neg) * e2_neg_sparse
-                # print l.shape
-                #
-                # entity_vector_grad += (np.dot(W[i][:, :, k], np.vstack((entity_vectors[:, e1.tolist()],entity_vectors[:, e2.tolist()]))) * temp_pos) * e1_sparse \
-                #                       + (np.dot(W[i][:, :, k].T, np.vstack((entity_vectors[:, e1.tolist()],entity_vectors[:, e2.tolist()]))) * temp_pos) * e2_sparse \
-                #                       + (np.dot(W[i][:, :, k], np.vstack((entity_vectors[:, e1_neg.tolist()],entity_vectors[:, e2_neg.tolist()]))) * temp_neg) * e1_neg_sparse \
-                #                       + (np.dot(W[i][:, :, k].T, np.vstack((entity_vectors[:, e1_neg.tolist()],entity_vectors[:, e2_neg.tolist()]))) * temp_neg) * e2_neg_sparse
+                    entity_vector_grad += l[self.embedding_size:, :]+m[:self.embedding_size, :]+n[self.embedding_size:, :]+o[:self.embedding_size, :]
 
             """ Normalize the gradients with the training batch size """
 

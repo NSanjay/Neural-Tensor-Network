@@ -16,8 +16,10 @@ def neuralTensorNetwork():
     w_param = program_parameters['w_param']
     if data_set == 0:
         data_set = 'data/Wordnet/'
-    else:
+    elif data_set == 1:
         data_set = 'data/Freebase/'
+    else:
+        data_set = 'data/DBpedia/'
     print data_set
     print(""" Get entity and relation data dictionaries """)
     entity_dictionary, num_entities = getDictionary(data_set+'entities.txt')
