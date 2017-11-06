@@ -23,7 +23,6 @@ relation_dictionary, num_relations = getDictionary(data_set+'relations.txt')
 word_indices, num_words = getWordIndices(data_set+'wordIndices.p')
 
 
-test_data, test_labels = getTestData(data_set + 'test.txt', entity_dictionary, relation_dictionary)
 
 
 def paramsToStack(theta, decode_info):
@@ -93,14 +92,15 @@ def getPredictions(test_data):
 
     return predictions
 
+for rel in relation_dictionary.keys():
+    test_data, test_labels = getTestData(data_set +'test/'+ rel +'.txt', entity_dictionary, relation_dictionary)
+    predictions = getPredictions(test_data)
 
-predictions = getPredictions(test_data)
-
-""" Print accuracy of the obtained predictions """
-
-print "Accuracy:", np.mean((predictions == test_labels))
-accuracy = np.mean((predictions == test_labels))
-f = open('test_accuracy.txt', 'a')
-f.write(str(datetime.datetime.now()) + '\t' + str(accuracy) + '\n')
-f.close()
+    """ Print accuracy of the obtained predictions """
+    print rel
+    print "Accuracy:", np.mean((predictions == test_labels))
+    # accuracy = np.mean((predictions == test_labels))
+    # f = open('test_accuracy.txt', 'a')
+    # f.write(str(datetime.datetime.now()) + '\t' + str(accuracy) + '\n')
+    # f.close()
 
