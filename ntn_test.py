@@ -50,10 +50,10 @@ def paramsToStack(theta, decode_info):
 
 def getPredictions(test_data):
     """ Get stack of network parameters """
-    theta = np.loadtxt(data_set+'theta.txt')
-    best_thresholds = np.loadtxt(data_set+'thresholds.txt')
+    theta = np.loadtxt(data_set+'params/theta.txt')
+    best_thresholds = np.loadtxt(data_set+'params/thresholds.txt')
 
-    with open(data_set+'decode_info.p', 'rb') as fp:
+    with open(data_set+'params/decode_info.p', 'rb') as fp:
         decode_info = pickle.load(fp)
 
     W, V, b, U, word_vectors = paramsToStack(theta, decode_info)
