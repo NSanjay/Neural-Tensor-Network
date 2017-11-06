@@ -20,7 +20,6 @@ def getTrainingData(file_name, entity_dictionary, relation_dictionary):
     index = 0
 
     for line in data:
-
         """ Obtain relation example text by splitting line """
         entity1, relation, entity2 = line.split()
 
@@ -52,7 +51,6 @@ def getTestData(file_name, entity_dictionary, relation_dictionary):
     index = 0
 
     for line in data:
-
         """ Obtain relation example text by splitting line """
 
         entity1, relation, entity2, label = line.split()

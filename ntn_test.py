@@ -13,8 +13,10 @@ embedding_size = program_parameters['embedding_size']
 slice_size = program_parameters['slice_size']
 if data_set == 0:
     data_set = 'data/Wordnet/'
-else:
+elif data_set == 1:
     data_set = 'data/Freebase/'
+else:
+    data_set = 'data/DBpedia/'
 
 entity_dictionary, num_entities = getDictionary(data_set+'entities.txt')
 relation_dictionary, num_relations = getDictionary(data_set+'relations.txt')

@@ -1,7 +1,10 @@
 birthPlace
 parent
+industry
 almaMater
+deathPlace
 child
 founders
 nationality
 spouse
+location
