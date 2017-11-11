@@ -50,10 +50,10 @@ def paramsToStack(theta, decode_info):
 
 def getPredictions(test_data):
     """ Get stack of network parameters """
-    theta = np.loadtxt(data_set+'params/theta.txt')
-    best_thresholds = np.loadtxt(data_set+'params/thresholds.txt')
+    theta = np.loadtxt(data_set+'org_params/theta.txt')
+    best_thresholds = np.loadtxt(data_set+'org_params/thresholds.txt')
 
-    with open(data_set+'params/decode_info.p', 'rb') as fp:
+    with open(data_set+'org_params/decode_info.p', 'rb') as fp:
         decode_info = pickle.load(fp)
 
     W, V, b, U, word_vectors = paramsToStack(theta, decode_info)
@@ -81,7 +81,7 @@ def getPredictions(test_data):
         """ Calculate the prediction score for the 'i'th example """
         for k in range(slice_size):
             test_score += U[rel][k, 0] * \
-                          (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
+                          (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
                            np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
 
         """ Give predictions based on previously calculate thresholds """
@@ -97,10 +97,20 @@ for rel in relation_dictionary.keys():
     predictions = getPredictions(test_data)
 
     """ Print accuracy of the obtained predictions """
-    print rel
-    print "Accuracy:", np.mean((predictions == test_labels))
-    # accuracy = np.mean((predictions == test_labels))
+    print str(rel)+" Accuracy:", np.mean((predictions == test_labels))
+   # accuracy = np.mean((predictions == test_labels))
     # f = open('test_accuracy.txt', 'a')
     # f.write(str(datetime.datetime.now()) + '\t' + str(accuracy) + '\n')
     # f.close()
+
+test_fc_data, test_fc_labels = getTestData(data_set + 'test_fc.txt', entity_dictionary, relation_dictionary)
+
+
+predictions_fc = getPredictions(test_fc_data)
+
+print "Accuracy_FC:", np.mean((predictions_fc == test_fc_labels))
+accuracy_fc = np.mean((predictions_fc == test_fc_labels))
+f = open('accuracy.txt', 'a')
+f.write(str(datetime.datetime.now()) + '\t'+'fc'+ '\t' + str(accuracy_fc) + '\n')
+f.close()
 
