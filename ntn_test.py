@@ -11,6 +11,8 @@ program_parameters = getProgramParameters()
 data_set = program_parameters['data_set']
 embedding_size = program_parameters['embedding_size']
 slice_size = program_parameters['slice_size']
+w_params = program_parameters['w_param']
+
 if data_set == 0:
     data_set = 'data/Wordnet/'
 elif data_set == 1:
@@ -21,9 +23,6 @@ else:
 entity_dictionary, num_entities = getDictionary(data_set+'entities.txt')
 relation_dictionary, num_relations = getDictionary(data_set+'relations.txt')
 word_indices, num_words = getWordIndices(data_set+'wordIndices.p')
-
-
-
 
 def paramsToStack(theta, decode_info):
     """ Initialize an empty stack """
@@ -75,10 +74,14 @@ def getPredictions(test_data, theta, decode_info):
 
         """ Calculate the prediction score for the 'i'th example """
         for k in range(slice_size):
-            test_score += U[rel][k, 0] * \
-                          (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
-                           np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
-
+            if w_params == 1:
+                test_score += U[rel][k, 0] * \
+                              (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
+                               np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
+            else:
+                test_score += U[rel][k, 0] * \
+                              (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
+                               np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
         """ Give predictions based on previously calculate thresholds """
         if (test_score <= best_thresholds[rel]):
             predictions[i, 0] = 1
@@ -94,7 +97,7 @@ def computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info):
     entity_vectors = np.zeros((embedding_size, num_entities))
     """ Assign entity vectors to be the mean of word vectors involved """
     for entity in range(num_entities):
-        entity_vectors[:, entity] = np.mean(word_vectors[:, word_indices[entity]], axis = 1)
+        entity_vectors[:, entity] = np.mean(word_vectors[:, word_indices[entity]], axis=1)
 
     dev_scores = np.zeros(dev_labels.shape)
     for i in range(dev_data.shape[0]):
@@ -106,10 +109,14 @@ def computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info):
         entity_stack = np.vstack((entity_vector_e1, entity_vector_e2))
         """ Calculate the prediction score for the 'i'th example """
         for k in range(slice_size):
-            dev_scores[i, 0] += U[rel][k, 0] * \
-                                (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
-                                 np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
-
+            if w_params == 1:
+                dev_scores[i, 0] += U[rel][k, 0] * \
+                                    (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
+                                     np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
+            else:
+                dev_scores[i, 0] += U[rel][k, 0] * \
+                                    (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
+                                     np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
     """ Minimum and maximum of the prediction scores """
     score_min = np.min(dev_scores)
     score_max = np.max(dev_scores)
@@ -169,7 +176,6 @@ test_fc_data, test_fc_labels = getTestData(data_set + 'test.txt', entity_diction
 
 predictions_fc = getPredictions(test_fc_data, theta, decode_info)
 np.savetxt("predictions_all.csv", predictions_fc, delimiter=",")
-np.savetxt("test_labels_all.csv", test_fc_labels, delimiter=",")
 
 print "Accuracy_FC:", np.mean((predictions_fc == test_fc_labels))
 accuracy_fc = np.mean((predictions_fc == test_fc_labels))

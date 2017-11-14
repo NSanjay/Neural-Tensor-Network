@@ -14,7 +14,7 @@ def getProgramParameters():
     program_parameters['lamda'] = 0.0001   # regulariization parameter
     program_parameters['batch_iterations'] = 5      # optimization iterations for each batch
     program_parameters['data_set'] = 2      # 0-Wordnet 1-Freebase 2-DBpedia
-    program_parameters['w_param'] = 1  # 0-original 1-modified
+    program_parameters['w_param'] = 0  # 0-original 1-modified
 
     return program_parameters
 

@@ -425,7 +425,6 @@ class NeuralTensorNetwork(object):
 
         """ Get stack of network parameters """
         W, V, b, U, word_vectors = self.paramsToStack(self.theta)
-
         np.savetxt(data_set+'theta.txt', self.theta)
 
         with open(data_set+'decode_info.p', 'wb') as fp:
@@ -438,7 +437,6 @@ class NeuralTensorNetwork(object):
         """ Assign entity vectors to be the mean of word vectors involved """
 
         for entity in range(self.num_entities):
-
             entity_vectors[:, entity] = np.mean(word_vectors[:, self.word_indices[entity]], axis = 1)
 
         """ Initialize prediction scores as matrix of zeros """
@@ -446,9 +444,7 @@ class NeuralTensorNetwork(object):
         dev_scores = np.zeros(dev_labels.shape)
 
         for i in range(dev_data.shape[0]):
-
             """ Extract required information from 'dev_data' """
-
             rel = dev_data[i, 1]
             entity_vector_e1 = entity_vectors[:, dev_data[i, 0]].reshape(self.embedding_size, 1)
             entity_vector_e2 = entity_vectors[:, dev_data[i, 2]].reshape(self.embedding_size, 1)
@@ -460,11 +456,14 @@ class NeuralTensorNetwork(object):
             """ Calculate the prediction score for the 'i'th example """
 
             for k in range(self.slice_size):
-
-                dev_scores[i, 0] += U[rel][k, 0] * \
-                                    (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
-                                     np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
-
+                if self.w_param == 1:
+                    dev_scores[i, 0] += U[rel][k, 0] * \
+                                        (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
+                                         np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
+                else:
+                    dev_scores[i, 0] += U[rel][k, 0] * \
+                                        (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
+                                         np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
         """ Minimum and maximum of the prediction scores """
 
         score_min = np.min(dev_scores)
@@ -476,7 +475,6 @@ class NeuralTensorNetwork(object):
         best_accuracies = np.empty((self.num_relations, 1))
 
         for i in range(self.num_relations):
-
             best_thresholds[i, :] = score_min
             best_accuracies[i, :] = -1
 
@@ -488,20 +486,15 @@ class NeuralTensorNetwork(object):
         while(score_temp <= score_max):
 
             for i in range(self.num_relations):
-
                 """ Check accuracy for 'i'th relation at 'score_temp' """
-
                 rel_i_list = (dev_data[:, 1] == i)
                 predictions = (dev_scores[rel_i_list, 0] <= score_temp) * 2 - 1
                 temp_accuracy = np.mean((predictions == dev_labels[rel_i_list, 0]))
 
                 """ If the accuracy is better, update the threshold and accuracy values """
-
                 if(temp_accuracy > best_accuracies[i, 0]):
-
                     best_accuracies[i, 0] = temp_accuracy
                     best_thresholds[i, 0] = score_temp
-
             score_temp += interval
 
         """ Store the threshold values to be used later """
@@ -515,29 +508,21 @@ class NeuralTensorNetwork(object):
     """ Returns predictions for the passed test data """
 
     def getPredictions(self, test_data):
-
         """ Get stack of network parameters """
-
         W, V, b, U, word_vectors = self.paramsToStack(self.theta)
 
         """ Initialize entity vectors as matrix of zeros """
-
         entity_vectors = np.zeros((self.embedding_size, self.num_entities))
 
         """ Assign entity vectors to be the mean of word vectors involved """
-
         for entity in range(self.num_entities):
-
             entity_vectors[:, entity] = np.mean(word_vectors[:, self.word_indices[entity]], axis = 1)
 
         """ Initialize predictions as an empty array """
-
         predictions = np.empty((test_data.shape[0], 1))
 
         for i in range(test_data.shape[0]):
-
             """ Extract required information from 'test_data' """
-
             rel = test_data[i, 1]
             entity_vector_e1  = entity_vectors[:, test_data[i, 0]].reshape(self.embedding_size, 1)
             entity_vector_e2  = entity_vectors[:, test_data[i, 2]].reshape(self.embedding_size, 1)
@@ -550,16 +535,18 @@ class NeuralTensorNetwork(object):
             """ Calculate the prediction score for the 'i'th example """
 
             for k in range(self.slice_size):
-
-                test_score += U[rel][k, 0] * \
-                              (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
-                               np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
-
+                if self.w_param == 1:
+                    test_score += U[rel][k, 0] * \
+                                  (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
+                                   np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
+                else:
+                    test_score += U[rel][k, 0] * \
+                                  (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
+                                   np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
             """ Give predictions based on previously calculate thresholds """
 
             if(test_score <= self.best_thresholds[rel, 0]):
                 predictions[i, 0] = 1
             else:
                 predictions[i, 0] = -1
-
         return predictions
