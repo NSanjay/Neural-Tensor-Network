@@ -36,40 +36,27 @@ def getTrainingData(file_name, entity_dictionary, relation_dictionary):
 
 
 def getTestData(file_name, entity_dictionary, relation_dictionary):
-
     """ Read and split data linewise """
-
     file_object = open(file_name, 'r')
     data = file_object.read().splitlines()
-
     """ Initialize test data and labels as empty matrices """
-
     num_entries = len(data)
     test_data = np.empty((num_entries, 3), dtype=int)
     labels = np.empty((num_entries, 1))
-
     index = 0
-
     for line in data:
         """ Obtain relation example text by splitting line """
-
         entity1, relation, entity2, label = line.split()
-
         """ Assign indices to the obtained entities and relation """
-
         test_data[index, 0] = entity_dictionary[entity1]
         test_data[index, 1] = relation_dictionary[relation]
         test_data[index, 2] = entity_dictionary[entity2]
-
         """ Label value for the example """
-
         if label == '1':
             labels[index, 0] = 1
         else:
             labels[index, 0] = -1
-
         index += 1
-
     return test_data, labels
 
 """ Create a numerical mapping of entity/relation data elements """

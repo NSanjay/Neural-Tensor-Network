@@ -48,14 +48,9 @@ def paramsToStack(theta, decode_info):
     return stack
 
 
-def getPredictions(test_data):
+def getPredictions(test_data, theta, decode_info):
     """ Get stack of network parameters """
-    theta = np.loadtxt(data_set+'org_params/theta.txt')
-    best_thresholds = np.loadtxt(data_set+'org_params/thresholds.txt')
-
-    with open(data_set+'org_params/decode_info.p', 'rb') as fp:
-        decode_info = pickle.load(fp)
-
+    best_thresholds = np.loadtxt(data_set+'thresholds_all.txt')
     W, V, b, U, word_vectors = paramsToStack(theta, decode_info)
 
     """ Initialize entity vectors as matrix of zeros """
@@ -66,7 +61,7 @@ def getPredictions(test_data):
         entity_vectors[:, entity] = np.mean(word_vectors[:, word_indices[entity]], axis=1)
 
     """ Initialize predictions as an empty array """
-    predictions = np.empty((test_data.shape[0], 1))
+    predictions = np.empty((test_data.shape[0], 3))
 
     for i in range(test_data.shape[0]):
         """ Extract required information from 'test_data' """
@@ -81,7 +76,7 @@ def getPredictions(test_data):
         """ Calculate the prediction score for the 'i'th example """
         for k in range(slice_size):
             test_score += U[rel][k, 0] * \
-                          (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
+                          (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
                            np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
 
         """ Give predictions based on previously calculate thresholds """
@@ -89,24 +84,92 @@ def getPredictions(test_data):
             predictions[i, 0] = 1
         else:
             predictions[i, 0] = -1
-
+        predictions[i, 1] = test_score
+        predictions[i, 2] = best_thresholds[rel]
     return predictions
 
-for rel in relation_dictionary.keys():
-    test_data, test_labels = getTestData(data_set +'test/'+ rel +'.txt', entity_dictionary, relation_dictionary)
-    predictions = getPredictions(test_data)
 
-    """ Print accuracy of the obtained predictions """
-    print str(rel)+" Accuracy:", np.mean((predictions == test_labels))
-   # accuracy = np.mean((predictions == test_labels))
-    # f = open('test_accuracy.txt', 'a')
-    # f.write(str(datetime.datetime.now()) + '\t' + str(accuracy) + '\n')
-    # f.close()
+def computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info):
+    W, V, b, U, word_vectors = paramsToStack(theta, decode_info)
+    entity_vectors = np.zeros((embedding_size, num_entities))
+    """ Assign entity vectors to be the mean of word vectors involved """
+    for entity in range(num_entities):
+        entity_vectors[:, entity] = np.mean(word_vectors[:, word_indices[entity]], axis = 1)
 
-test_fc_data, test_fc_labels = getTestData(data_set + 'test_fc.txt', entity_dictionary, relation_dictionary)
+    dev_scores = np.zeros(dev_labels.shape)
+    for i in range(dev_data.shape[0]):
+        """ Extract required information from 'dev_data' """
+        rel = dev_data[i, 1]
+        entity_vector_e1 = entity_vectors[:, dev_data[i, 0]].reshape(embedding_size, 1)
+        entity_vector_e2 = entity_vectors[:, dev_data[i, 2]].reshape(embedding_size, 1)
+        """ Stack the entity vectors one over the other """
+        entity_stack = np.vstack((entity_vector_e1, entity_vector_e2))
+        """ Calculate the prediction score for the 'i'th example """
+        for k in range(slice_size):
+            dev_scores[i, 0] += U[rel][k, 0] * \
+                                (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
+                                 np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
+
+    """ Minimum and maximum of the prediction scores """
+    score_min = np.min(dev_scores)
+    score_max = np.max(dev_scores)
+    """ Initialize thresholds and accuracies """
+    best_thresholds = np.empty((num_relations, 1))
+    best_accuracies = np.empty((num_relations, 1))
+    for i in range(num_relations):
+        best_thresholds[i, :] = score_min
+        best_accuracies[i, :] = -1
+
+    score_temp = score_min
+    interval = 0.01
+
+    """ Check for the best accuracy at intervals between 'score_min' and 'score_max' """
+    while(score_temp <= score_max):
+        for i in range(num_relations):
+            """ Check accuracy for 'i'th relation at 'score_temp' """
+            rel_i_list = (dev_data[:, 1] == i)
+            predictions = (dev_scores[rel_i_list, 0] <= score_temp) * 2 - 1
+            temp_accuracy = np.mean((predictions == dev_labels[rel_i_list, 0]))
+            """ If the accuracy is better, update the threshold and accuracy values """
+            if(temp_accuracy > best_accuracies[i, 0]):
+                best_accuracies[i, 0] = temp_accuracy
+                best_thresholds[i, 0] = score_temp
+        score_temp += interval
+    """ Store the threshold values to be used later """
+    # print "Best Threshold: " + str(best_thresholds)
+    best_thresholds = best_thresholds
+    np.savetxt(data_set+'thresholds_all.txt', best_thresholds)
 
 
-predictions_fc = getPredictions(test_fc_data)
+theta = np.loadtxt(data_set+'theta_fc.txt')
+
+with open(data_set + 'decode_info_fc.p', 'rb') as fp:
+    decode_info = pickle.load(fp)
+
+dev_data, dev_labels = getTestData(data_set+'dev.txt', entity_dictionary, relation_dictionary)
+
+computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info)
+
+# for rel in relation_dictionary.keys():
+#     test_data, test_labels = getTestData(data_set + 'test/' + rel + '.txt', entity_dictionary, relation_dictionary)
+#     predictions = getPredictions(test_data, theta, decode_info)
+#     """ Print accuracy of the obtained predictions """
+#     print str(rel)+" Accuracy:", np.mean((predictions == test_labels))
+#     print type(predictions)
+#     print type(test_labels)
+#     np.savetxt(str(rel)+"predictions_fc.csv", predictions, delimiter=",")
+#     np.savetxt(str(rel)+"test_fc_labels.csv", test_labels, delimiter=",")
+#    # accuracy = np.mean((predictions == test_labels))
+#     # f = open('test_accuracy.txt', 'a')
+#     # f.write(str(datetime.datetime.now()) + '\t' + str(accuracy) + '\n')
+#     # f.close()
+
+test_fc_data, test_fc_labels = getTestData(data_set + 'test.txt', entity_dictionary, relation_dictionary)
+
+
+predictions_fc = getPredictions(test_fc_data, theta, decode_info)
+np.savetxt("predictions_all.csv", predictions_fc, delimiter=",")
+np.savetxt("test_labels_all.csv", test_fc_labels, delimiter=",")
 
 print "Accuracy_FC:", np.mean((predictions_fc == test_fc_labels))
 accuracy_fc = np.mean((predictions_fc == test_fc_labels))
