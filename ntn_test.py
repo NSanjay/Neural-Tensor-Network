@@ -11,6 +11,8 @@ program_parameters = getProgramParameters()
 data_set = program_parameters['data_set']
 embedding_size = program_parameters['embedding_size']
 slice_size = program_parameters['slice_size']
+w_param = program_parameters['w_param']
+
 if data_set == 0:
     data_set = 'data/Wordnet/'
 elif data_set == 1:
@@ -106,9 +108,14 @@ def computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info):
         entity_stack = np.vstack((entity_vector_e1, entity_vector_e2))
         """ Calculate the prediction score for the 'i'th example """
         for k in range(slice_size):
-            dev_scores[i, 0] += U[rel][k, 0] * \
-                                (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
-                                 np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
+            if w_param == 0:
+                dev_scores[i, 0] += U[rel][k, 0] * \
+                                    (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
+                                     np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
+            else:
+                dev_scores[i, 0] += U[rel][k, 0] * \
+                                    (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
+                                     np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
 
     """ Minimum and maximum of the prediction scores """
     score_min = np.min(dev_scores)

@@ -460,8 +460,12 @@ class NeuralTensorNetwork(object):
             """ Calculate the prediction score for the 'i'th example """
 
             for k in range(self.slice_size):
-
-                dev_scores[i, 0] += U[rel][k, 0] * \
+                if self.w_param == 0:
+                    dev_scores[i, 0] += U[rel][k, 0] * \
+                                        (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
+                                         np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
+                else:
+                    dev_scores[i, 0] += U[rel][k, 0] * \
                                     (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
                                      np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
 
@@ -539,8 +543,8 @@ class NeuralTensorNetwork(object):
             """ Extract required information from 'test_data' """
 
             rel = test_data[i, 1]
-            entity_vector_e1  = entity_vectors[:, test_data[i, 0]].reshape(self.embedding_size, 1)
-            entity_vector_e2  = entity_vectors[:, test_data[i, 2]].reshape(self.embedding_size, 1)
+            entity_vector_e1 = entity_vectors[:, test_data[i, 0]].reshape(self.embedding_size, 1)
+            entity_vector_e2 = entity_vectors[:, test_data[i, 2]].reshape(self.embedding_size, 1)
 
             """ Stack the entity vectors one over the other """
 
@@ -550,8 +554,12 @@ class NeuralTensorNetwork(object):
             """ Calculate the prediction score for the 'i'th example """
 
             for k in range(self.slice_size):
-
-                test_score += U[rel][k, 0] * \
+                if self.w_param == 0:
+                    test_score += U[rel][k, 0] * \
+                                  (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
+                                   np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
+                else:
+                    test_score += U[rel][k, 0] * \
                               (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
                                np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
 
