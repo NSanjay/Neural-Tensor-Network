@@ -7,16 +7,20 @@ data_set = '../'
 entity_set = []
 relation_set = []
 word_set = []
+person_set = []
 
 with open(data_set+'all_data.tsv') as tsv:
     reader = csv.reader(tsv, delimiter='\t')
     for row in reader:
         entity_set.extend([row[0], row[2]])
         relation_set.append(row[1])
+        person_set.append(row[0])
         row_0 = row[0].split('_')
         row_2 = row[2].split('_')
         word_set.extend(row_0)
         word_set.extend(row_2)
+    person_set_full = person_set
+    person_set = list(set(person_set))
     word_set_full = word_set
     word_set = list(set(word_set))
     entity_set_full = entity_set
@@ -29,6 +33,19 @@ print relation_count_dict
 
 entity_count_dict = {i:entity_set_full.count(i) for i in set(entity_set_full)}
 word_count_dict = {i:word_set_full.count(i) for i in set(word_set_full)}
+person_count_dict = {i:person_set_full.count(i) for i in set(person_set_full)}
+
+
+with open('person_count.csv', 'wb') as f:
+    writer = csv.writer(f)
+    for row in person_count_dict.iteritems():
+        writer.writerow(row)
+
+
+with open('relation_count.csv', 'wb') as f:
+    writer = csv.writer(f)
+    for row in relation_count_dict.iteritems():
+        writer.writerow(row)
 
 
 with open('entity_count.csv', 'wb') as f:
