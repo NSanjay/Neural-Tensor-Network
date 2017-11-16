@@ -11,11 +11,7 @@ program_parameters = getProgramParameters()
 data_set = program_parameters['data_set']
 embedding_size = program_parameters['embedding_size']
 slice_size = program_parameters['slice_size']
-<<<<<<< HEAD
-w_param = program_parameters['w_param']
-=======
 w_params = program_parameters['w_param']
->>>>>>> 2961b845b9dc8e5eb431e0f48dc62d6d796c3c81
 
 if data_set == 0:
     data_set = 'data/Wordnet/'
@@ -51,9 +47,14 @@ def paramsToStack(theta, decode_info):
     return stack
 
 
-def getPredictions(test_data, theta, decode_info):
+def getPredictions(test_data):
     """ Get stack of network parameters """
-    best_thresholds = np.loadtxt(data_set+'thresholds_all.txt')
+    print data_set
+    theta = np.loadtxt(data_set + 'parameters/theta.txt')
+
+    with open(data_set + 'parameters/decode_info.p', 'rb') as fp:
+        decode_info = pickle.load(fp)
+    best_thresholds = np.loadtxt(data_set+'parameters/thresholds.txt')
     W, V, b, U, word_vectors = paramsToStack(theta, decode_info)
 
     """ Initialize entity vectors as matrix of zeros """
@@ -64,7 +65,7 @@ def getPredictions(test_data, theta, decode_info):
         entity_vectors[:, entity] = np.mean(word_vectors[:, word_indices[entity]], axis=1)
 
     """ Initialize predictions as an empty array """
-    predictions = np.empty((test_data.shape[0], 3))
+    predictions = np.empty((test_data.shape[0], 1))
 
     for i in range(test_data.shape[0]):
         """ Extract required information from 'test_data' """
@@ -91,8 +92,8 @@ def getPredictions(test_data, theta, decode_info):
             predictions[i, 0] = 1
         else:
             predictions[i, 0] = -1
-        predictions[i, 1] = test_score
-        predictions[i, 2] = best_thresholds[rel]
+        # predictions[i, 1] = test_score
+        # predictions[i, 2] = best_thresholds[rel]
     return predictions
 
 
@@ -113,8 +114,7 @@ def computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info):
         entity_stack = np.vstack((entity_vector_e1, entity_vector_e2))
         """ Calculate the prediction score for the 'i'th example """
         for k in range(slice_size):
-<<<<<<< HEAD
-            if w_param == 0:
+            if w_params == 0:
                 dev_scores[i, 0] += U[rel][k, 0] * \
                                     (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
                                      np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
@@ -123,16 +123,6 @@ def computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info):
                                     (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
                                      np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
 
-=======
-            if w_params == 1:
-                dev_scores[i, 0] += U[rel][k, 0] * \
-                                    (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
-                                     np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
-            else:
-                dev_scores[i, 0] += U[rel][k, 0] * \
-                                    (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
-                                     np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
->>>>>>> 2961b845b9dc8e5eb431e0f48dc62d6d796c3c81
     """ Minimum and maximum of the prediction scores """
     score_min = np.min(dev_scores)
     score_max = np.max(dev_scores)
@@ -161,17 +151,14 @@ def computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info):
     """ Store the threshold values to be used later """
     # print "Best Threshold: " + str(best_thresholds)
     best_thresholds = best_thresholds
-    np.savetxt(data_set+'thresholds_all.txt', best_thresholds)
+    np.savetxt(data_set+'thresholds.txt', best_thresholds)
 
 
-theta = np.loadtxt(data_set+'theta_fc.txt')
 
-with open(data_set + 'decode_info_fc.p', 'rb') as fp:
-    decode_info = pickle.load(fp)
 
-dev_data, dev_labels = getTestData(data_set+'dev.txt', entity_dictionary, relation_dictionary)
-
-computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info)
+# dev_data, dev_labels = getTestData(data_set+'dev.txt', entity_dictionary, relation_dictionary)
+#
+# computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info)
 
 # for rel in relation_dictionary.keys():
 #     test_data, test_labels = getTestData(data_set + 'test/' + rel + '.txt', entity_dictionary, relation_dictionary)
@@ -187,15 +174,16 @@ computeBestThresholds(dev_data, dev_labels, data_set, theta, decode_info)
 #     # f.write(str(datetime.datetime.now()) + '\t' + str(accuracy) + '\n')
 #     # f.close()
 
-test_fc_data, test_fc_labels = getTestData(data_set + 'test.txt', entity_dictionary, relation_dictionary)
+test_data, test_labels = getTestData(data_set + 'test.txt', entity_dictionary, relation_dictionary)
 
 
-predictions_fc = getPredictions(test_fc_data, theta, decode_info)
-np.savetxt("predictions_all.csv", predictions_fc, delimiter=",")
+predictions = getPredictions(test_data)
+print predictions.shape
+np.savetxt(data_set +"parameters/predictions_all.csv", predictions, delimiter=",")
 
-print "Accuracy_FC:", np.mean((predictions_fc == test_fc_labels))
-accuracy_fc = np.mean((predictions_fc == test_fc_labels))
+accuracy = np.mean((predictions == test_labels))
+print accuracy
 f = open('accuracy.txt', 'a')
-f.write(str(datetime.datetime.now()) + '\t'+'fc'+ '\t' + str(accuracy_fc) + '\n')
+f.write(str(datetime.datetime.now()) + '\t' +'fc' + '\t' + str(accuracy) + '\n')
 f.close()
 

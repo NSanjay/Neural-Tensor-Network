@@ -425,9 +425,9 @@ class NeuralTensorNetwork(object):
 
         """ Get stack of network parameters """
         W, V, b, U, word_vectors = self.paramsToStack(self.theta)
-        np.savetxt(data_set+'theta.txt', self.theta)
+        np.savetxt(data_set+'parameters/theta.txt', self.theta)
 
-        with open(data_set+'decode_info.p', 'wb') as fp:
+        with open(data_set+'parameters/decode_info.p', 'wb') as fp:
             pickle.dump(self.decode_info, fp)
 
         """ Initialize entity vectors as matrix of zeros """
@@ -456,7 +456,6 @@ class NeuralTensorNetwork(object):
             """ Calculate the prediction score for the 'i'th example """
 
             for k in range(self.slice_size):
-<<<<<<< HEAD
                 if self.w_param == 0:
                     dev_scores[i, 0] += U[rel][k, 0] * \
                                         (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
@@ -466,16 +465,6 @@ class NeuralTensorNetwork(object):
                                     (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
                                      np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
 
-=======
-                if self.w_param == 1:
-                    dev_scores[i, 0] += U[rel][k, 0] * \
-                                        (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
-                                         np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
-                else:
-                    dev_scores[i, 0] += U[rel][k, 0] * \
-                                        (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
-                                         np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
->>>>>>> 2961b845b9dc8e5eb431e0f48dc62d6d796c3c81
         """ Minimum and maximum of the prediction scores """
 
         score_min = np.min(dev_scores)
@@ -514,7 +503,7 @@ class NeuralTensorNetwork(object):
         self.best_thresholds = best_thresholds
         # print self.best_thresholds
         # print type(self.best_thresholds)
-        np.savetxt(data_set+'thresholds.txt', self.best_thresholds)
+        np.savetxt(data_set+'parameters/thresholds.txt', self.best_thresholds)
 
         #######################################################################################
     """ Returns predictions for the passed test data """
@@ -547,7 +536,6 @@ class NeuralTensorNetwork(object):
             """ Calculate the prediction score for the 'i'th example """
 
             for k in range(self.slice_size):
-<<<<<<< HEAD
                 if self.w_param == 0:
                     test_score += U[rel][k, 0] * \
                                   (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
@@ -557,16 +545,6 @@ class NeuralTensorNetwork(object):
                               (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
                                np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
 
-=======
-                if self.w_param == 1:
-                    test_score += U[rel][k, 0] * \
-                                  (np.dot(entity_stack.T, np.dot(W[rel][:, :, k], entity_stack)) +
-                                   np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
-                else:
-                    test_score += U[rel][k, 0] * \
-                                  (np.dot(entity_vector_e1.T, np.dot(W[rel][:, :, k], entity_vector_e2)) +
-                                   np.dot(V[rel][:, k].T, entity_stack) + b[rel][0, k])
->>>>>>> 2961b845b9dc8e5eb431e0f48dc62d6d796c3c81
             """ Give predictions based on previously calculate thresholds """
 
             if(test_score <= self.best_thresholds[rel, 0]):
