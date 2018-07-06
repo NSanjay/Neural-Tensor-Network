@@ -22,7 +22,7 @@ def tsv_writer_unique(name):
 
 
 def corrupt(data):
-    with open(data_set + data + '.txt') as tsv:
+    with open(data + '.txt') as tsv:
         reader = csv.reader(tsv, delimiter='\t')
         for row in reader:
             print row
@@ -46,6 +46,5 @@ def corrupt(data):
     tsv_writer(suffle_rel, data)
     tsv_writer_unique(data)
 
-data_list = ['dev','test']
-for data in data_list:
-    corrupt(data)
+# corrupt('spouseraw')
+corrupt('childrenraw')

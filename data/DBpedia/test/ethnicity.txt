@@ -1,4 +1,0 @@
-Ivanka_Trump    ethnicity       Lebanese_people -1
-Ivanka_Trump    ethnicity       German_American 1
-Amal_Clooney    ethnicity       German_American -1
-Amal_Clooney    ethnicity       Lebanese_people 1

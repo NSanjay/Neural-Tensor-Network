@@ -1,0 +1,9 @@
+e1	relation	e2	label	prediction	score	threshold	difference	prediction
+Carol_Chomsky	cause_of_death	Cancer	1	-1	0.1954312675	-0.9469644531	-1.1423957206	FALSE
+Carol_Chomsky	cause_of_death	Ovarian_cancer	-1	-1	-0.3824861091	-0.9469644531	-0.564478344	FALSE
+Christina_Onassis	cause_of_death	Myocardial_infarction	1	-1	-0.1361260761	-0.9469644531	-0.810838377	FALSE
+Christina_Onassis	cause_of_death	Stroke	-1	-1	0.195460268	-0.9469644531	-1.1424247211	FALSE
+Marcheline_Bertrand	cause_of_death	Ovarian_cancer	1	-1	-0.3824768125	-0.9469644531	-0.5644876406	FALSE
+Marcheline_Bertrand	cause_of_death	Myocardial_infarction	-1	-1	-0.136146429	-0.9469644531	-0.8108180241	FALSE
+Martin_Balsam	cause_of_death	Stroke	1	-1	0.1956025794	-0.9469644531	-1.1425670325	FALSE
+Martin_Balsam	cause_of_death	Cancer	-1	-1	0.1956025791	-0.9469644531	-1.1425670322	FALSE
